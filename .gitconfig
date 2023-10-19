@@ -1,0 +1,14 @@
+[user]
+	name = Vedran Blazenka
+	email = blazenka.vedran@gmail.com
+
+[alias]
+	p = pull
+    ch = checkout
+    ci = commit
+    st = status
+    br = branch
+    aa = add .
+    gr = rebase master
+    gc = commit -m
+	gl = log
