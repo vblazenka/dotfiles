@@ -1,0 +1,16 @@
+[user]
+	name = Vedran Blazenka
+	email = blazenka.vedran@gmail.com
+
+[alias]
+	# Git-specific aliases (complement shell aliases)
+	st = status
+	ci = commit
+	co = checkout
+	br = branch
+	unstage = reset HEAD --
+	last = log -1 HEAD
+	visual = !gitk
+	tree = log --oneline --graph --decorate --all
+	amend = commit --amend
+	undo = reset --soft HEAD^
