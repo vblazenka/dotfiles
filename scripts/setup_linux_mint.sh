@@ -141,6 +141,9 @@ install_zsh() {
     # Install Oh My Zsh
     install_oh_my_zsh
     
+    # Install additional plugins
+    install_zsh_plugins
+    
     # Set Zsh as default shell
     set_zsh_default_shell
     
@@ -166,6 +169,32 @@ install_oh_my_zsh() {
     fi
     
     log_success "Oh My Zsh installed successfully"
+}
+
+install_zsh_plugins() {
+    log_info "Installing additional Zsh plugins..."
+    
+    local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+    
+    # Install zsh-autosuggestions
+    if [[ ! -d "$zsh_custom/plugins/zsh-autosuggestions" ]]; then
+        log_info "Installing zsh-autosuggestions..."
+        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_custom/plugins/zsh-autosuggestions"
+        log_success "zsh-autosuggestions installed"
+    else
+        log_success "zsh-autosuggestions is already installed"
+    fi
+    
+    # Install zsh-syntax-highlighting
+    if [[ ! -d "$zsh_custom/plugins/zsh-syntax-highlighting" ]]; then
+        log_info "Installing zsh-syntax-highlighting..."
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$zsh_custom/plugins/zsh-syntax-highlighting"
+        log_success "zsh-syntax-highlighting installed"
+    else
+        log_success "zsh-syntax-highlighting is already installed"
+    fi
+    
+    log_success "Zsh plugins installation completed"
 }
 
 set_zsh_default_shell() {

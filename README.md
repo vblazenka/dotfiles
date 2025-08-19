@@ -44,7 +44,7 @@ dotfiles/
 
 - [x] Git configuration
 - [x] **Neovim** - Modern Vim-based editor (with vim alias)
-- [x] **Zsh + Oh My Zsh** - Modern shell with plugins and themes
+- [x] **Zsh + Oh My Zsh** - Modern shell with autosuggestions, syntax highlighting & themes
 - [x] **UV + Python** - Modern Python package manager + latest Python
 - [x] **NVM + Node.js** - Node Version Manager + latest LTS Node.js
 - [x] **Zed** - High-performance code editor (Rust-based)
@@ -102,6 +102,16 @@ cdn      # Jump to ~/Documents/notes
 ```
 
 These aliases are included in your .zshrc and make navigating your development environment super fast!
+
+## Zsh Plugins
+
+The setup automatically installs these powerful Zsh plugins:
+
+- **git** - Git integration and shortcuts (built-in)
+- **zsh-autosuggestions** - Command suggestions based on history
+- **zsh-syntax-highlighting** - Real-time syntax highlighting
+- **colored-man-pages** - Colorized manual pages
+- **command-not-found** - Package suggestions for missing commands
 
 ## Development Applications
 
