@@ -37,7 +37,7 @@ mv dotfiles/.gitconfig git/gitconfig
 **Step 3: Verify moves**
 
 Run: `ls -la shell/ git/`
-Expected: gitconfig in git/, shell/ empty (zshrc moved in Task 2)
+Expected: gitconfig in git/, shell/ empty (will be populated in Task 2)
 
 **Step 4: Commit structure change**
 
@@ -56,6 +56,7 @@ git commit -m "refactor: create new directory structure for cross-platform suppo
 - Create: `shell/zshrc.macos` (macOS-specific)
 - Create: `shell/zshrc.linux` (Linux-specific)
 - Create: `shell/zshrc.wsl` (WSL-specific)
+- Create: `shell/hushlogin` (suppress login messages)
 - Delete: `dotfiles/.zshrc`
 
 **Step 1: Create the loader file `shell/zshrc`**
@@ -266,19 +267,26 @@ export PATH="$GOPATH/bin:$PATH"
 alias cdwin='cd /mnt/c/Users/$USER'
 ```
 
-**Step 6: Remove old zshrc and dotfiles directory**
+**Step 6: Create `shell/hushlogin`**
+
+```bash
+# Empty file - its presence suppresses the "Last login" message
+touch shell/hushlogin
+```
+
+**Step 7: Remove old zshrc and dotfiles directory**
 
 ```bash
 rm dotfiles/.zshrc
 rmdir dotfiles 2>/dev/null || rm -r dotfiles  # Remove if empty or has only hidden files
 ```
 
-**Step 7: Verify all files exist**
+**Step 8: Verify all files exist**
 
 Run: `ls -la shell/`
-Expected: zshrc, zshrc.common, zshrc.macos, zshrc.linux, zshrc.wsl
+Expected: zshrc, zshrc.common, zshrc.macos, zshrc.linux, zshrc.wsl, hushlogin
 
-**Step 8: Commit shell restructure**
+**Step 9: Commit shell restructure**
 
 ```bash
 git add -A
@@ -428,6 +436,11 @@ setup_symlinks() {
     ln -sf "$dotfiles_dir/shell/zshrc" "$HOME/.zshrc"
     log_success "Linked ~/.zshrc"
 
+    # Hushlogin (suppress "Last login" message)
+    backup_if_exists "$HOME/.hushlogin"
+    ln -sf "$dotfiles_dir/shell/hushlogin" "$HOME/.hushlogin"
+    log_success "Linked ~/.hushlogin"
+
     # Git config
     backup_if_exists "$HOME/.gitconfig"
     ln -sf "$dotfiles_dir/git/gitconfig" "$HOME/.gitconfig"
@@ -440,8 +453,9 @@ setup_symlinks() {
     log_success "Linked ~/.config/zellij/config.kdl"
 
     # Neovim config (link entire directory)
+    # -n flag: treat symlink to directory as file, preventing nested links on re-run
     backup_if_exists "$HOME/.config/nvim"
-    ln -sf "$dotfiles_dir/nvim" "$HOME/.config/nvim"
+    ln -sfn "$dotfiles_dir/nvim" "$HOME/.config/nvim"
     log_success "Linked ~/.config/nvim"
 
     log_success "All symlinks created"
@@ -462,65 +476,18 @@ git commit -m "feat: add symlink setup script"
 
 ---
 
-## Task 7: Create macOS Setup Script
+## Task 7: Create Common Setup Functions
 
 **Files:**
-- Create: `scripts/setup_macos.sh`
+- Create: `scripts/setup_common.sh`
 
-**Step 1: Create macOS setup script**
+**Step 1: Create shared functions used by all platforms**
 
 ```bash
 #!/bin/bash
 
-# macOS Setup Script
-
-install_homebrew() {
-    log_info "Checking Homebrew..."
-
-    if command -v brew &> /dev/null; then
-        log_success "Homebrew is already installed"
-        return 0
-    fi
-
-    log_info "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    # Add to path for current session
-    if [[ -d "/opt/homebrew" ]]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi
-
-    log_success "Homebrew installed"
-}
-
-install_packages_macos() {
-    log_info "Installing packages via Homebrew..."
-
-    local packages=(
-        "git"
-        "neovim"
-        "zellij"
-        "zsh"
-        "curl"
-        "wget"
-        "tree"
-        "htop"
-        "ripgrep"
-        "fd"
-        "fzf"
-    )
-
-    for package in "${packages[@]}"; do
-        if brew list "$package" &>/dev/null; then
-            log_success "$package is already installed"
-        else
-            log_info "Installing $package..."
-            brew install "$package"
-        fi
-    done
-
-    log_success "Package installation completed"
-}
+# Common Setup Functions
+# Shared across macOS, Linux, and WSL setup scripts
 
 install_oh_my_zsh() {
     log_info "Checking Oh My Zsh..."
@@ -581,8 +548,11 @@ install_nvm() {
         return 0
     fi
 
-    log_info "Installing NVM..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    # Version pinned - check https://github.com/nvm-sh/nvm/releases for updates
+    local nvm_version="0.40.1"
+
+    log_info "Installing NVM v${nvm_version}..."
+    curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v${nvm_version}/install.sh" | bash
 
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -610,19 +580,98 @@ setup_folder_structure() {
 
     log_success "Folder structure created"
 }
+```
+
+**Step 2: Verify script syntax**
+
+Run: `bash -n scripts/setup_common.sh`
+Expected: No output (no syntax errors)
+
+**Step 3: Commit common functions**
+
+```bash
+git add scripts/setup_common.sh
+git commit -m "feat: extract common setup functions to shared script"
+```
+
+---
+
+## Task 8: Create macOS Setup Script
+
+**Files:**
+- Create: `scripts/setup_macos.sh`
+
+**Step 1: Create macOS setup script**
+
+```bash
+#!/bin/bash
+
+# macOS Setup Script
+# Uses common functions from setup_common.sh
+
+# Source common functions
+source "$DOTFILES_DIR/scripts/setup_common.sh"
+
+install_homebrew() {
+    log_info "Checking Homebrew..."
+
+    if command -v brew &> /dev/null; then
+        log_success "Homebrew is already installed"
+        return 0
+    fi
+
+    log_info "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add to path for current session
+    if [[ -d "/opt/homebrew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
+
+    log_success "Homebrew installed"
+}
+
+install_packages_macos() {
+    log_info "Installing packages via Homebrew..."
+
+    local packages=(
+        "git"
+        "neovim"
+        "zellij"
+        "zsh"
+        "curl"
+        "wget"
+        "tree"
+        "htop"
+        "ripgrep"
+        "fd"
+        "fzf"
+    )
+
+    for package in "${packages[@]}"; do
+        if brew list "$package" &>/dev/null; then
+            log_success "$package is already installed"
+        else
+            log_info "Installing $package..."
+            brew install "$package"
+        fi
+    done
+
+    log_success "Package installation completed"
+}
 
 main_macos() {
     log_info "Starting macOS setup..."
 
     install_homebrew
     install_packages_macos
-    install_oh_my_zsh
-    install_zsh_plugins
+    install_oh_my_zsh      # from setup_common.sh
+    install_zsh_plugins    # from setup_common.sh
     source "$DOTFILES_DIR/scripts/setup_symlinks.sh"
     setup_symlinks "$DOTFILES_DIR"
-    install_uv
-    install_nvm
-    setup_folder_structure
+    install_uv             # from setup_common.sh
+    install_nvm            # from setup_common.sh
+    setup_folder_structure # from setup_common.sh
 
     log_success "macOS setup completed!"
 }
@@ -644,7 +693,7 @@ git commit -m "feat: add macOS setup script"
 
 ---
 
-## Task 8: Create Linux Setup Script
+## Task 9: Create Linux Setup Script
 
 **Files:**
 - Create: `scripts/setup_linux.sh`
@@ -658,6 +707,10 @@ git commit -m "feat: add macOS setup script"
 # Linux Setup Script
 # Works for Debian/Ubuntu-based distros (apt)
 # Omarchy uses apt
+# Uses common functions from setup_common.sh
+
+# Source common functions
+source "$DOTFILES_DIR/scripts/setup_common.sh"
 
 detect_package_manager() {
     if command -v apt &> /dev/null; then
@@ -694,6 +747,8 @@ install_packages_linux() {
         "tree"
         "htop"
         "ripgrep"
+        "fd-find"
+        "fzf"
         "xclip"
         "unzip"
     )
@@ -720,7 +775,7 @@ install_zellij_linux() {
     if command -v cargo &> /dev/null; then
         cargo install --locked zellij
     else
-        # Download binary
+        # Version pinned - check https://github.com/zellij-org/zellij/releases for updates
         local version="0.40.1"
         local arch=$(uname -m)
         curl -L "https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-${arch}-unknown-linux-musl.tar.gz" | tar xz -C /tmp
@@ -729,40 +784,6 @@ install_zellij_linux() {
     fi
 
     log_success "Zellij installed"
-}
-
-install_oh_my_zsh() {
-    log_info "Checking Oh My Zsh..."
-
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
-        log_success "Oh My Zsh is already installed"
-        return 0
-    fi
-
-    log_info "Installing Oh My Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-    log_success "Oh My Zsh installed"
-}
-
-install_zsh_plugins() {
-    log_info "Installing Zsh plugins..."
-
-    local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-
-    if [[ ! -d "$zsh_custom/plugins/zsh-autosuggestions" ]]; then
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_custom/plugins/zsh-autosuggestions"
-        log_success "Installed zsh-autosuggestions"
-    else
-        log_success "zsh-autosuggestions already installed"
-    fi
-
-    if [[ ! -d "$zsh_custom/plugins/zsh-syntax-highlighting" ]]; then
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting "$zsh_custom/plugins/zsh-syntax-highlighting"
-        log_success "Installed zsh-syntax-highlighting"
-    else
-        log_success "zsh-syntax-highlighting already installed"
-    fi
 }
 
 set_zsh_default() {
@@ -783,73 +804,20 @@ set_zsh_default() {
     log_success "Default shell changed to Zsh"
 }
 
-install_uv() {
-    log_info "Checking UV..."
-
-    if command -v uv &> /dev/null; then
-        log_success "UV is already installed"
-        return 0
-    fi
-
-    log_info "Installing UV..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
-
-    log_success "UV installed"
-}
-
-install_nvm() {
-    log_info "Checking NVM..."
-
-    if [[ -d "$HOME/.nvm" ]]; then
-        log_success "NVM is already installed"
-        return 0
-    fi
-
-    log_info "Installing NVM..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-    log_info "Installing Node.js LTS..."
-    nvm install --lts
-    nvm alias default node
-
-    log_success "NVM and Node.js installed"
-}
-
-setup_folder_structure() {
-    log_info "Setting up folder structure..."
-
-    local dirs=(
-        "$HOME/Documents/github/vblazenka"
-        "$HOME/Documents/projects"
-        "$HOME/Documents/scripts"
-        "$HOME/Documents/notes"
-    )
-
-    for dir in "${dirs[@]}"; do
-        mkdir -p "$dir"
-    done
-
-    log_success "Folder structure created"
-}
-
 main_linux() {
     log_info "Starting Linux setup..."
 
     detect_package_manager
     install_packages_linux
     install_zellij_linux
-    install_oh_my_zsh
-    install_zsh_plugins
+    install_oh_my_zsh      # from setup_common.sh
+    install_zsh_plugins    # from setup_common.sh
     set_zsh_default
     source "$DOTFILES_DIR/scripts/setup_symlinks.sh"
     setup_symlinks "$DOTFILES_DIR"
-    install_uv
-    install_nvm
-    setup_folder_structure
+    install_uv             # from setup_common.sh
+    install_nvm            # from setup_common.sh
+    setup_folder_structure # from setup_common.sh
 
     log_success "Linux setup completed!"
 }
@@ -878,7 +846,7 @@ git commit -m "feat: replace linux_mint script with generic linux setup"
 
 ---
 
-## Task 9: Create WSL Setup Script
+## Task 10: Create WSL Setup Script
 
 **Files:**
 - Create: `scripts/setup_wsl.sh`
@@ -890,6 +858,10 @@ git commit -m "feat: replace linux_mint script with generic linux setup"
 
 # WSL Setup Script
 # Based on Linux setup with WSL-specific additions
+# Uses common functions from setup_common.sh
+
+# Source common functions
+source "$DOTFILES_DIR/scripts/setup_common.sh"
 
 install_packages_wsl() {
     log_info "Updating apt and installing packages..."
@@ -905,6 +877,8 @@ install_packages_wsl() {
         "tree"
         "htop"
         "ripgrep"
+        "fd-find"
+        "fzf"
         "unzip"
         "build-essential"
     )
@@ -927,46 +901,14 @@ install_zellij_wsl() {
 
     log_info "Installing Zellij..."
 
+    # Version pinned - check https://github.com/zellij-org/zellij/releases for updates
     local version="0.40.1"
-    curl -L "https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp
+    local arch=$(uname -m)
+    curl -L "https://github.com/zellij-org/zellij/releases/download/v${version}/zellij-${arch}-unknown-linux-musl.tar.gz" | tar xz -C /tmp
     sudo mv /tmp/zellij /usr/local/bin/
     sudo chmod +x /usr/local/bin/zellij
 
     log_success "Zellij installed"
-}
-
-install_oh_my_zsh() {
-    log_info "Checking Oh My Zsh..."
-
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
-        log_success "Oh My Zsh is already installed"
-        return 0
-    fi
-
-    log_info "Installing Oh My Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-    log_success "Oh My Zsh installed"
-}
-
-install_zsh_plugins() {
-    log_info "Installing Zsh plugins..."
-
-    local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-
-    if [[ ! -d "$zsh_custom/plugins/zsh-autosuggestions" ]]; then
-        git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_custom/plugins/zsh-autosuggestions"
-        log_success "Installed zsh-autosuggestions"
-    else
-        log_success "zsh-autosuggestions already installed"
-    fi
-
-    if [[ ! -d "$zsh_custom/plugins/zsh-syntax-highlighting" ]]; then
-        git clone https://github.com/zsh-users/zsh-syntax-highlighting "$zsh_custom/plugins/zsh-syntax-highlighting"
-        log_success "Installed zsh-syntax-highlighting"
-    else
-        log_success "zsh-syntax-highlighting already installed"
-    fi
 }
 
 set_zsh_default() {
@@ -987,72 +929,19 @@ set_zsh_default() {
     log_success "Default shell changed to Zsh"
 }
 
-install_uv() {
-    log_info "Checking UV..."
-
-    if command -v uv &> /dev/null; then
-        log_success "UV is already installed"
-        return 0
-    fi
-
-    log_info "Installing UV..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
-
-    log_success "UV installed"
-}
-
-install_nvm() {
-    log_info "Checking NVM..."
-
-    if [[ -d "$HOME/.nvm" ]]; then
-        log_success "NVM is already installed"
-        return 0
-    fi
-
-    log_info "Installing NVM..."
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-    log_info "Installing Node.js LTS..."
-    nvm install --lts
-    nvm alias default node
-
-    log_success "NVM and Node.js installed"
-}
-
-setup_folder_structure() {
-    log_info "Setting up folder structure..."
-
-    local dirs=(
-        "$HOME/Documents/github/vblazenka"
-        "$HOME/Documents/projects"
-        "$HOME/Documents/scripts"
-        "$HOME/Documents/notes"
-    )
-
-    for dir in "${dirs[@]}"; do
-        mkdir -p "$dir"
-    done
-
-    log_success "Folder structure created"
-}
-
 main_wsl() {
     log_info "Starting WSL setup..."
 
     install_packages_wsl
     install_zellij_wsl
-    install_oh_my_zsh
-    install_zsh_plugins
+    install_oh_my_zsh      # from setup_common.sh
+    install_zsh_plugins    # from setup_common.sh
     set_zsh_default
     source "$DOTFILES_DIR/scripts/setup_symlinks.sh"
     setup_symlinks "$DOTFILES_DIR"
-    install_uv
-    install_nvm
-    setup_folder_structure
+    install_uv             # from setup_common.sh
+    install_nvm            # from setup_common.sh
+    setup_folder_structure # from setup_common.sh
 
     log_success "WSL setup completed!"
     log_info "Note: Some Windows apps (Cursor, Obsidian) should be installed on Windows side"
@@ -1075,7 +964,7 @@ git commit -m "feat: add WSL setup script"
 
 ---
 
-## Task 10: Update Main Install Script
+## Task 11: Update Main Install Script
 
 **Files:**
 - Modify: `install.sh`
@@ -1179,7 +1068,7 @@ git commit -m "refactor: update install.sh for cross-platform support"
 
 ---
 
-## Task 11: Clean Up and Update Packages
+## Task 12: Clean Up and Update Packages
 
 **Files:**
 - Delete: `packages/packages_linux_mint.txt`
@@ -1212,7 +1101,7 @@ git commit -m "chore: remove packages directory, inline package lists in setup s
 
 ---
 
-## Task 12: Test on Current Machine (macOS)
+## Task 13: Test on Current Machine (macOS)
 
 **Step 1: Run a dry-run test of the install script structure**
 
@@ -1255,7 +1144,7 @@ Expected: "Zsh config loaded successfully" (may show some warnings about missing
 
 ---
 
-## Task 13: Update README
+## Task 14: Update README
 
 **Files:**
 - Modify: `README.md`
@@ -1294,6 +1183,7 @@ dotfiles/
 ├── install.sh           # Main entry point
 ├── scripts/
 │   ├── detect_os.sh     # OS detection
+│   ├── setup_common.sh  # Shared functions
 │   ├── setup_symlinks.sh
 │   ├── setup_macos.sh
 │   ├── setup_linux.sh
@@ -1303,7 +1193,8 @@ dotfiles/
 │   ├── zshrc.common     # Shared config
 │   ├── zshrc.macos      # macOS-specific
 │   ├── zshrc.linux      # Linux-specific
-│   └── zshrc.wsl        # WSL-specific
+│   ├── zshrc.wsl        # WSL-specific
+│   └── hushlogin        # Suppress login message
 ├── git/
 │   └── gitconfig
 ├── zellij/
@@ -1346,7 +1237,7 @@ git commit -m "docs: update README for cross-platform setup"
 
 ## Summary
 
-After completing all tasks, the dotfiles structure will be:
+After completing all 14 tasks, the dotfiles structure will be:
 
 ```
 dotfiles/
@@ -1354,6 +1245,7 @@ dotfiles/
 ├── README.md               # Updated documentation
 ├── scripts/
 │   ├── detect_os.sh        # Returns: macos, linux, wsl
+│   ├── setup_common.sh     # Shared functions (oh-my-zsh, nvm, uv, etc.)
 │   ├── setup_symlinks.sh   # Creates all symlinks
 │   ├── setup_macos.sh      # Homebrew-based setup
 │   ├── setup_linux.sh      # apt-based setup (generic)
@@ -1363,7 +1255,8 @@ dotfiles/
 │   ├── zshrc.common        # Shared aliases, plugins, prompt
 │   ├── zshrc.macos         # brew aliases, pbcopy, Go paths
 │   ├── zshrc.linux         # apt aliases, xclip, Linux paths
-│   └── zshrc.wsl           # Windows interop, clip.exe
+│   ├── zshrc.wsl           # Windows interop, clip.exe
+│   └── hushlogin           # Suppress "Last login" message
 ├── git/
 │   └── gitconfig           # Universal git config
 ├── zellij/
