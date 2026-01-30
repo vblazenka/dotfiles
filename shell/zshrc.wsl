@@ -1,5 +1,29 @@
 # Vedran's Zsh Configuration - WSL Specific
 
+# Locale settings (fix WSL locale warnings)
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+# SSH Agent - auto-start and load keys
+SSH_ENV="$HOME/.ssh/agent-environment"
+SSH_KEYS=("id_ed25519" "id_work")  # Add your key names here
+
+start_ssh_agent() {
+    ssh-agent | sed 's/^echo/#echo/' > "$SSH_ENV"
+    chmod 600 "$SSH_ENV"
+    . "$SSH_ENV" > /dev/null
+    for key in "${SSH_KEYS[@]}"; do
+        [[ -f "$HOME/.ssh/$key" ]] && ssh-add "$HOME/.ssh/$key" 2>/dev/null
+    done
+}
+
+if [ -f "$SSH_ENV" ]; then
+    . "$SSH_ENV" > /dev/null
+    ps -p "$SSH_AGENT_PID" > /dev/null 2>&1 || start_ssh_agent
+else
+    start_ssh_agent
+fi
+
 # System aliases (apt-based in WSL)
 alias update='sudo apt update && sudo apt upgrade'
 alias install='sudo apt install'
@@ -16,6 +40,7 @@ alias o='explorer.exe .'
 # Application shortcuts (launch Windows apps)
 alias cursor='cmd.exe /c start cursor'
 alias obsidian='cmd.exe /c start obsidian'
+alias c='claude'
 
 # Go configuration
 export PATH="$PATH:/usr/local/go/bin"

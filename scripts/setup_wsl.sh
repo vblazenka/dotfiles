@@ -55,6 +55,18 @@ install_zellij_wsl() {
     log_success "Zellij installed"
 }
 
+configure_locale() {
+    log_info "Configuring locale..."
+
+    if locale -a 2>/dev/null | grep -q "en_US.utf8"; then
+        log_success "Locale en_US.UTF-8 is already configured"
+        return 0
+    fi
+
+    sudo locale-gen en_US.UTF-8
+    log_success "Locale configured"
+}
+
 set_zsh_default() {
     log_info "Setting Zsh as default shell..."
 
@@ -76,6 +88,7 @@ set_zsh_default() {
 main_wsl() {
     log_info "Starting WSL setup..."
 
+    configure_locale
     install_packages_wsl
     install_zellij_wsl
     install_oh_my_zsh      # from setup_common.sh
