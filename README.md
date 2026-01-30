@@ -1,133 +1,72 @@
-# Dotfiles 🤘
+# Dotfiles
 
-Automated development environment setup for Linux Mint and other operating systems.
+Cross-platform dotfiles for macOS, Linux, and Windows (WSL2).
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/vblazenka/dotfiles.git
-cd dotfiles
+git clone https://github.com/vblazenka/dotfiles.git ~/Documents/github/vblazenka/dotfiles
+cd ~/Documents/github/vblazenka/dotfiles
 ./install.sh
 ```
 
-## Repository Structure
+The install script automatically detects your OS and:
+- Installs required packages (zsh, neovim, zellij, etc.)
+- Sets up Oh My Zsh with plugins
+- Creates symlinks for all configs
+- Installs development tools (UV, NVM)
+
+## Supported Systems
+
+- **macOS** - Uses Homebrew
+- **Linux** - Uses apt (Debian/Ubuntu-based, including Omarchy)
+- **WSL2** - Windows Subsystem for Linux
+
+## Structure
 
 ```
 dotfiles/
-├── install.sh              # Main installation script
-├── scripts/                 # Installation and setup scripts
-│   ├── detect_os.sh        # OS detection utilities  
-│   └── setup_linux_mint.sh # Linux Mint specific setup
-├── dotfiles/               # Configuration files
-│   ├── .gitconfig         # Git configuration
-│   └── .zshrc             # Zsh shell configuration
-├── packages/               # Package lists per OS
-│   └── packages_linux_mint.txt
-└── configs/                # System preferences
+├── install.sh           # Main entry point
+├── scripts/
+│   ├── detect_os.sh     # OS detection
+│   ├── setup_common.sh  # Shared functions
+│   ├── setup_symlinks.sh
+│   ├── setup_macos.sh
+│   ├── setup_linux.sh
+│   └── setup_wsl.sh
+├── shell/
+│   ├── zshrc            # Loader (sources others)
+│   ├── zshrc.common     # Shared config
+│   ├── zshrc.macos      # macOS-specific
+│   ├── zshrc.linux      # Linux-specific
+│   ├── zshrc.wsl        # WSL-specific
+│   └── hushlogin        # Suppress login message
+├── git/
+│   └── gitconfig
+├── zellij/
+│   └── config.kdl
+└── nvim/
+    └── (LazyVim config)
 ```
 
-## Current Features
+## What Gets Installed
 
-- ✅ **OS Detection**: Automatically detects Linux Mint, Ubuntu, macOS
-- ✅ **Git Setup**: Installs git and configures with your information  
-- ✅ **Package Manager**: Updates apt and installs essential packages
-- ✅ **Dotfiles Management**: Symlinks configuration files safely
-- ✅ **Modern Shell**: Zsh with Oh My Zsh, custom prompt and aliases
-- ✅ **Python Environment**: UV package manager + latest Python version (self-contained)
-- ✅ **Node.js Environment**: NVM + latest LTS Node.js
-- ✅ **Code Editors**: Neovim, Zed (Rust-based), Cursor (AI-powered)
-- ✅ **Note Taking**: Obsidian via Flatpak
-- ✅ **Development Tools**: Build tools, modern development workflow
-- ✅ **Folder Structure**: Organized development directories with navigation aliases
+- **Shell**: Zsh + Oh My Zsh + plugins (autosuggestions, syntax highlighting)
+- **Editor**: Neovim with LazyVim
+- **Terminal**: Zellij
+- **Python**: UV package manager
+- **Node.js**: NVM + LTS version
+- **Packages**: git, curl, wget, ripgrep, tree, htop, etc.
 
-## Software Checklist
+## Manual Steps After Install
 
-- [x] Git configuration
-- [x] **Neovim** - Modern Vim-based editor (with vim alias)
-- [x] **Zsh + Oh My Zsh** - Modern shell with autosuggestions, syntax highlighting & themes
-- [x] **UV + Python** - Modern Python package manager + latest Python
-- [x] **NVM + Node.js** - Node Version Manager + latest LTS Node.js
-- [x] **Zed** - High-performance code editor (Rust-based)
-- [x] **Cursor** - AI-powered code editor (simple AppImage)
-- [x] **Obsidian** - Note-taking and knowledge management (Flatpak)
-- [ ] Discord
-- [ ] Slack
+1. Restart your terminal (or run `zsh`)
+2. Open Neovim - plugins will auto-install on first launch
+3. Configure any additional tools as needed
 
-## Python Development with UV
+## Customization
 
-After installation, you can use UV for modern Python development:
-
-```bash
-# Install latest Python
-uv python install
-
-# Create a new project
-uv init my-project
-cd my-project
-
-# Add dependencies
-uv add requests numpy
-
-# Run Python scripts
-uv run script.py
-
-# Install tools globally
-uv tool install black ruff
-
-# List Python versions
-uv python list
-```
-
-## Folder Structure & Navigation
-
-The setup automatically creates an organized development directory structure:
-
-```
-~/Documents/
-├── github/
-│   └── vblazenka/        # Your GitHub projects
-├── projects/             # General projects
-├── scripts/              # Utility scripts
-└── notes/                # Documentation and notes
-```
-
-### Quick Navigation Aliases
-
-```bash
-cdg      # Jump to ~/Documents/github
-cdgv     # Jump to ~/Documents/github/vblazenka
-cdp      # Jump to ~/Documents/projects
-cds      # Jump to ~/Documents/scripts
-cdn      # Jump to ~/Documents/notes
-```
-
-These aliases are included in your .zshrc and make navigating your development environment super fast!
-
-## Zsh Plugins
-
-The setup automatically installs these powerful Zsh plugins:
-
-- **git** - Git integration and shortcuts (built-in)
-- **zsh-autosuggestions** - Command suggestions based on history
-- **zsh-syntax-highlighting** - Real-time syntax highlighting
-- **colored-man-pages** - Colorized manual pages
-- **command-not-found** - Package suggestions for missing commands
-
-## Development Applications
-
-### Code Editors
-- **Zed**: Installed via official installer - `zed`
-- **Cursor**: Simple AppImage download - `cursor` or `~/Applications/cursor.appimage`
-- **Neovim**: Package manager installation with vim alias - `vim` or `nvim`
-
-### Node.js Development
-- **NVM**: Node Version Manager - `nvm install node`, `nvm use node`
-- **Node.js**: Latest LTS installed automatically
-
-### Python Development
-- **UV**: Modern Python package manager - see Python section above
-- **Python**: Latest version managed by UV
-
-### Note Taking
-- **Obsidian**: Installed via Flatpak - `flatpak run md.obsidian.Obsidian` or from app menu
-- Works perfectly with the `~/Documents/notes` folder structure
+- Add aliases to `shell/zshrc.common` (shared) or OS-specific files
+- Edit `git/gitconfig` for git settings
+- Modify `zellij/config.kdl` for terminal multiplexer
+- Neovim config is in `nvim/` (LazyVim-based)
