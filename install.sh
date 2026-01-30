@@ -2,7 +2,7 @@
 
 # Dotfiles Installation Script
 # Author: Vedran Blazenka
-# Description: Automated setup for development environment
+# Description: Cross-platform development environment setup
 
 set -e  # Exit on any error
 
@@ -15,6 +15,7 @@ NC='\033[0m' # No Color
 
 # Dotfiles directory
 DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export DOTFILES_DIR
 
 # Logging functions
 log_info() {
@@ -33,10 +34,13 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Export logging functions for child scripts
+export -f log_info log_success log_warning log_error
+
 # Header
 echo -e "${BLUE}"
 echo "======================================="
-echo "  🚀 Dotfiles Installation Script"
+echo "  Dotfiles Installation Script"
 echo "======================================="
 echo -e "${NC}"
 
@@ -52,17 +56,17 @@ log_info "Detected OS: $OS_TYPE"
 
 # Run OS-specific setup
 case "$OS_TYPE" in
-    "linux_mint")
-        log_info "Running Linux Mint setup..."
-        source "$DOTFILES_DIR/scripts/setup_linux_mint.sh"
-        ;;
-    "ubuntu")
-        log_info "Running Ubuntu setup..."
-        source "$DOTFILES_DIR/scripts/setup_ubuntu.sh"
-        ;;
     "macos")
         log_info "Running macOS setup..."
         source "$DOTFILES_DIR/scripts/setup_macos.sh"
+        ;;
+    "linux")
+        log_info "Running Linux setup..."
+        source "$DOTFILES_DIR/scripts/setup_linux.sh"
+        ;;
+    "wsl")
+        log_info "Running WSL setup..."
+        source "$DOTFILES_DIR/scripts/setup_wsl.sh"
         ;;
     *)
         log_error "Unsupported operating system: $OS_TYPE"
@@ -70,5 +74,5 @@ case "$OS_TYPE" in
         ;;
 esac
 
-log_success "Installation completed! 🎉"
+log_success "Installation completed!"
 log_info "Please restart your terminal to apply all changes."
