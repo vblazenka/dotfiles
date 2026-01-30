@@ -1,0 +1,19 @@
+# Vedran's Zsh Configuration - Linux Specific
+
+# System aliases (apt-based - adjust if using different distro)
+alias update='sudo apt update && sudo apt upgrade'
+alias install='sudo apt install'
+alias search='apt search'
+
+# Clipboard (requires xclip)
+alias clip='xclip -selection clipboard'
+alias paste='xclip -selection clipboard -o'
+
+# Application shortcuts (Linux style)
+alias cursor='~/Applications/cursor.appimage &>/dev/null &'
+alias obsidian='flatpak run md.obsidian.Obsidian &>/dev/null &'
+
+# Go configuration (standard Linux location)
+export PATH="$PATH:/usr/local/go/bin"
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"

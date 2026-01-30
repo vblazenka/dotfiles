@@ -1,0 +1,21 @@
+# Vedran's Zsh Configuration Loader
+# Detects OS and sources appropriate config files
+
+DOTFILES_SHELL="${0:A:h}"
+
+# Source common configuration (works on all platforms)
+source "$DOTFILES_SHELL/zshrc.common"
+
+# Detect OS and source platform-specific config
+case "$(uname -s)" in
+    Darwin)
+        source "$DOTFILES_SHELL/zshrc.macos"
+        ;;
+    Linux)
+        if grep -qi microsoft /proc/version 2>/dev/null; then
+            source "$DOTFILES_SHELL/zshrc.wsl"
+        else
+            source "$DOTFILES_SHELL/zshrc.linux"
+        fi
+        ;;
+esac

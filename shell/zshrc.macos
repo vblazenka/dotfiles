@@ -1,0 +1,35 @@
+# Vedran's Zsh Configuration - macOS Specific
+
+# Homebrew paths (Apple Silicon)
+if [[ -d "/opt/homebrew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Homebrew paths (Intel)
+if [[ -d "/usr/local/Homebrew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# macOS-specific aliases
+alias update='brew update && brew upgrade'
+alias install='brew install'
+alias search='brew search'
+
+# Clipboard (native on macOS)
+alias clip='pbcopy'
+alias paste='pbpaste'
+
+# Open Finder
+alias o='open .'
+
+# Application shortcuts (macOS style)
+alias cursor='open -a "Cursor"'
+alias obsidian='open -a "Obsidian"'
+
+# Go configuration (Homebrew location)
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+if [[ -d "/opt/homebrew/opt/go/libexec" ]]; then
+    export GOROOT="/opt/homebrew/opt/go/libexec"
+    export PATH="$GOROOT/bin:$PATH"
+fi

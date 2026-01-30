@@ -1,0 +1,26 @@
+# Vedran's Zsh Configuration - WSL Specific
+
+# System aliases (apt-based in WSL)
+alias update='sudo apt update && sudo apt upgrade'
+alias install='sudo apt install'
+alias search='apt search'
+
+# Clipboard (use Windows clip.exe)
+alias clip='clip.exe'
+alias paste='powershell.exe -command "Get-Clipboard"'
+
+# Open Windows Explorer
+alias explorer='explorer.exe .'
+alias o='explorer.exe .'
+
+# Application shortcuts (launch Windows apps)
+alias cursor='cmd.exe /c start cursor'
+alias obsidian='cmd.exe /c start obsidian'
+
+# Go configuration
+export PATH="$PATH:/usr/local/go/bin"
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+
+# WSL-specific: Access Windows home
+alias cdwin='cd /mnt/c/Users/$USER'
