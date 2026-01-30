@@ -1,7 +1,12 @@
 # Vedran's Zsh Configuration Loader
 # Detects OS and sources appropriate config files
 
-DOTFILES_SHELL="${0:A:h}"
+# Resolve the actual location of this file (follows symlink from ~/.zshrc)
+if [[ -L "$HOME/.zshrc" ]]; then
+    DOTFILES_SHELL="$(dirname "$(readlink -f "$HOME/.zshrc" 2>/dev/null || readlink "$HOME/.zshrc")")"
+else
+    DOTFILES_SHELL="${0:A:h}"
+fi
 
 # Source common configuration (works on all platforms)
 source "$DOTFILES_SHELL/zshrc.common"
