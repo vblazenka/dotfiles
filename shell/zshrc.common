@@ -52,6 +52,10 @@ alias gch="git checkout"
 alias gl="git log"
 alias glog="git log --oneline --graph --decorate"
 
+# Claude Code
+alias c='claude'
+alias cc='claude -c'
+
 # Python/UV aliases
 alias py='python3'
 alias pip='pip3'
@@ -62,6 +66,50 @@ alias uvs='uv sync'
 alias uvl='uv lock'
 alias uvt='uv tool install'
 alias uvp='uv python install'
+
+# List scripts from nearest package.json in current git repo
+scripts() {
+    local root
+    root=$(git rev-parse --show-toplevel 2>/dev/null) || root="."
+    local pkg="$root/package.json"
+    if [[ -f "$pkg" ]]; then
+        echo "Scripts in package.json:"
+        node -e "
+            const s = JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).scripts || {};
+            const entries = Object.entries(s);
+            if (!entries.length) { console.log('  (no scripts defined)'); process.exit(); }
+            const max = Math.max(...entries.map(([k]) => k.length));
+            entries.forEach(([k, v]) => console.log('  \x1b[36m' + k.padEnd(max + 2) + '\x1b[0m' + v));
+        " "$pkg"
+    else
+        echo "No package.json found in repository root"
+    fi
+}
+
+# Copy file contents to clipboard
+copyfile() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: copyfile <file>"
+        return 1
+    fi
+    if [[ ! -f "$1" ]]; then
+        echo "File not found: $1"
+        return 1
+    fi
+    if command -v pbcopy &>/dev/null; then
+        cat "$1" | pbcopy
+    elif command -v xclip &>/dev/null; then
+        cat "$1" | xclip -selection clipboard
+    elif command -v xsel &>/dev/null; then
+        cat "$1" | xsel --clipboard
+    elif command -v clip.exe &>/dev/null; then
+        cat "$1" | clip.exe
+    else
+        echo "No clipboard tool found"
+        return 1
+    fi
+    echo "Copied contents of $1 to clipboard"
+}
 
 # Custom prompt
 function parse_git_branch() {

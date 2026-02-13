@@ -33,3 +33,13 @@ if [[ -d "/opt/homebrew/opt/go/libexec" ]]; then
     export GOROOT="/opt/homebrew/opt/go/libexec"
     export PATH="$GOROOT/bin:$PATH"
 fi
+
+# OpenJDK (Homebrew)
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
