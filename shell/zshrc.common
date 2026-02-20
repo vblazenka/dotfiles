@@ -86,6 +86,22 @@ scripts() {
     fi
 }
 
+# Kill process on a given port
+kp() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: kp <port>"
+        return 1
+    fi
+    local pid
+    pid=$(lsof -ti :"$1" 2>/dev/null)
+    if [[ -z "$pid" ]]; then
+        echo "No process found on port $1"
+        return 1
+    fi
+    echo "Killing PID $pid on port $1"
+    kill -9 $pid
+}
+
 # Copy file contents to clipboard
 copyfile() {
     if [[ -z "$1" ]]; then
