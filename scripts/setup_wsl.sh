@@ -14,7 +14,6 @@ install_packages_wsl() {
 
     local packages=(
         "git"
-        "neovim"
         "zsh"
         "curl"
         "wget"
@@ -33,6 +32,39 @@ install_packages_wsl() {
     done
 
     log_success "Package installation completed"
+}
+
+install_neovim() {
+    log_info "Checking Neovim..."
+
+    # LazyVim requires Neovim >= 0.11.2, apt version is too old
+    local required_version="0.11.0"
+
+    if command -v nvim &> /dev/null; then
+        local current_version=$(nvim --version | head -1 | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+')
+        if [[ "$(printf '%s\n' "$required_version" "$current_version" | sort -V | head -1)" == "$required_version" ]]; then
+            log_success "Neovim $current_version is already installed"
+            return 0
+        fi
+        log_info "Neovim $current_version is too old, upgrading..."
+    fi
+
+    log_info "Installing Neovim from GitHub releases..."
+
+    # Version pinned - check https://github.com/neovim/neovim/releases for updates
+    local version="0.11.6"
+    local arch=$(uname -m)
+    local tmp_dir=$(mktemp -d)
+
+    curl -L "https://github.com/neovim/neovim/releases/download/v${version}/nvim-linux-${arch}.tar.gz" | tar xz -C "$tmp_dir"
+    sudo rm -rf /opt/nvim
+    sudo mv "$tmp_dir/nvim-linux-${arch}" /opt/nvim
+    rm -rf "$tmp_dir"
+
+    # Add to path via symlink
+    sudo ln -sf /opt/nvim/bin/nvim /usr/local/bin/nvim
+
+    log_success "Neovim $version installed"
 }
 
 install_zellij_wsl() {
@@ -90,6 +122,7 @@ main_wsl() {
 
     configure_locale
     install_packages_wsl
+    install_neovim
     install_zellij_wsl
     install_oh_my_zsh      # from setup_common.sh
     install_zsh_plugins    # from setup_common.sh

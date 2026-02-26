@@ -24,6 +24,7 @@ export EDITOR='nvim'
 alias reload="source ~/.zshrc"
 alias ezsh="$EDITOR ~/.zshrc"
 alias vim='nvim'
+alias v='nvim'
 
 # Directory navigation
 alias ..="cd .. && pwd"

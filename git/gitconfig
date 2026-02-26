@@ -14,3 +14,5 @@
 	tree = log --oneline --graph --decorate --all
 	amend = commit --amend
 	undo = reset --soft HEAD^
+[init]
+	defaultBranch = main
