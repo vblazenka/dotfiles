@@ -64,6 +64,7 @@ main_macos() {
     source "$DOTFILES_DIR/scripts/setup_symlinks.sh"
     setup_symlinks "$DOTFILES_DIR"
     install_uv             # from setup_common.sh
+    install_bun            # from setup_common.sh
     install_nvm            # from setup_common.sh
     setup_folder_structure # from setup_common.sh
 

@@ -54,6 +54,20 @@ install_uv() {
     log_success "UV installed"
 }
 
+install_bun() {
+    log_info "Checking Bun..."
+
+    if command -v bun &> /dev/null; then
+        log_success "Bun is already installed"
+        return 0
+    fi
+
+    log_info "Installing Bun..."
+    curl -fsSL https://bun.sh/install | bash
+
+    log_success "Bun installed"
+}
+
 install_nvm() {
     log_info "Checking NVM..."
 
