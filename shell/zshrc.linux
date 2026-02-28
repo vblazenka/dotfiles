@@ -1,9 +1,19 @@
 # Vedran's Zsh Configuration - Linux Specific
 
-# System aliases (apt-based - adjust if using different distro)
-alias update='sudo apt update && sudo apt upgrade'
-alias install='sudo apt install'
-alias search='apt search'
+# System aliases (auto-detect package manager)
+if command -v dnf &> /dev/null; then
+    alias update='sudo dnf upgrade --refresh'
+    alias install='sudo dnf install'
+    alias search='dnf search'
+elif command -v apt &> /dev/null; then
+    alias update='sudo apt update && sudo apt upgrade'
+    alias install='sudo apt install'
+    alias search='apt search'
+elif command -v pacman &> /dev/null; then
+    alias update='sudo pacman -Syu'
+    alias install='sudo pacman -S'
+    alias search='pacman -Ss'
+fi
 
 # Clipboard (requires xclip)
 alias clip='xclip -selection clipboard'

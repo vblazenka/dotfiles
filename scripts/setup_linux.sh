@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Linux Setup Script
-# Works for Debian/Ubuntu-based distros (apt)
-# Omarchy uses apt
+# Works for Debian/Ubuntu (apt), Fedora (dnf), and Arch (pacman)
 # Uses common functions from setup_common.sh
 
 # Source common functions
@@ -16,7 +15,7 @@ detect_package_manager() {
     elif command -v dnf &> /dev/null; then
         PKG_MANAGER="dnf"
         PKG_INSTALL="sudo dnf install -y"
-        PKG_UPDATE="sudo dnf check-update"
+        PKG_UPDATE="sudo dnf makecache"
     elif command -v pacman &> /dev/null; then
         PKG_MANAGER="pacman"
         PKG_INSTALL="sudo pacman -S --noconfirm"
@@ -34,6 +33,12 @@ install_packages_linux() {
 
     $PKG_UPDATE
 
+    # fd-find is the Debian/Ubuntu name; Fedora and Arch use fd
+    local fd_pkg="fd"
+    if [[ "$PKG_MANAGER" == "apt" ]]; then
+        fd_pkg="fd-find"
+    fi
+
     local packages=(
         "git"
         "zsh"
@@ -42,7 +47,7 @@ install_packages_linux() {
         "tree"
         "htop"
         "ripgrep"
-        "fd-find"
+        "$fd_pkg"
         "fzf"
         "xclip"
         "unzip"
@@ -128,7 +133,7 @@ set_zsh_default() {
         echo "$zsh_path" | sudo tee -a /etc/shells
     fi
 
-    chsh -s "$zsh_path"
+    sudo chsh -s "$zsh_path" "$(whoami)"
     log_success "Default shell changed to Zsh"
 }
 
