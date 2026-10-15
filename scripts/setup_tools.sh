@@ -149,9 +149,8 @@ setup_folder_structure() {
     log_info "Setting up folder structure..."
 
     local dirs=(
-        "$HOME/Documents/github/vblazenka"
-        "$HOME/Documents/projects"
-        "$HOME/Documents/scripts"
+        "$HOME/code/github.com/vblazenka"
+        "$HOME/code/playground"
         "$HOME/Documents/notes"
     )
 

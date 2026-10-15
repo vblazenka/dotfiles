@@ -37,6 +37,7 @@ export EDITOR='nvim'
 # PATH and tool managers
 # ---------------------------------------------------------------------------
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/dotfiles/bin:$PATH"   # personal scripts (versioned in dotfiles)
 
 # NVM
 export NVM_DIR="$HOME/.nvm"
@@ -92,12 +93,14 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-# Project navigation
-alias cdg='cd ~/Documents/github'
-alias cdgv='cd ~/Documents/github/vblazenka'
-alias cdp='cd ~/Documents/projects'
-alias cds='cd ~/Documents/scripts'
+# Project navigation (code lives in ~/code, outside iCloud-synced folders)
+alias cdc='cd ~/code'
+alias cdg='cd ~/code/github.com'
+alias cdgv='cd ~/code/github.com/vblazenka'
+alias cdp='cd ~/code/playground'
+alias cds='cd ~/dotfiles/bin'
 alias cdn='cd ~/Documents/notes'
+alias cdd='cd ~/dotfiles'
 
 # Git
 alias g="git"
@@ -212,3 +215,6 @@ PROMPT='%F{cyan}$%f $(parse_git_branch): '
 
 # direnv
 command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
+
+# uv env (written by the uv installer)
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"

@@ -5,8 +5,8 @@ Personal macOS development environment: Zsh, Neovim (LazyVim), Zellij, Git.
 ## Quick Start
 
 ```bash
-git clone https://github.com/vblazenka/dotfiles.git ~/Documents/github/vblazenka/dotfiles
-cd ~/Documents/github/vblazenka/dotfiles
+git clone https://github.com/vblazenka/dotfiles.git ~/dotfiles
+cd ~/dotfiles
 ./install.sh
 ```
 
@@ -15,13 +15,20 @@ The install script:
 - Sets up Oh My Zsh with plugins
 - Symlinks all configs into place (existing files are backed up with a `.backup` suffix)
 - Installs development tools (UV, Bun, NVM + Node LTS)
-- Creates the `~/Documents/{github/vblazenka,projects,scripts,notes}` folders
+- Creates the folder structure:
+  - `~/code/github.com/<owner>/<repo>`: cloned repos, grouped by host and owner
+  - `~/code/playground/`: throwaway experiments
+  - `~/Documents/notes/`: notes (fine to sync with iCloud)
+
+  Code is kept out of `~/Documents` because iCloud Desktop & Documents sync
+  chokes on `.git` and `node_modules`.
 
 ## Structure
 
 ```
 dotfiles/
 ├── install.sh                 # Entry point (macOS only)
+├── bin/                       # Personal scripts, on PATH
 ├── scripts/
 │   ├── setup_tools.sh         # Homebrew, packages, Oh My Zsh, UV, Bun, NVM
 │   └── setup_symlinks.sh      # Links configs into $HOME
