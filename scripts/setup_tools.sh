@@ -1,7 +1,61 @@
 #!/bin/bash
 
-# Common Setup Functions
-# Shared across macOS, Linux, and WSL setup scripts
+# Tool installers for macOS
+# Functions only; install.sh sources this file and calls them in order.
+
+install_homebrew() {
+    log_info "Checking Homebrew..."
+
+    if command -v brew &> /dev/null; then
+        log_success "Homebrew is already installed"
+        return 0
+    fi
+
+    log_info "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add to path for current session
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+
+    log_success "Homebrew installed"
+}
+
+install_packages() {
+    log_info "Installing packages via Homebrew..."
+
+    # Third-party formulae use the fully qualified tap/name form.
+    local packages=(
+        "git"
+        "neovim"
+        "zellij"
+        "zsh"
+        "curl"
+        "wget"
+        "tree"
+        "htop"
+        "ripgrep"
+        "fd"
+        "fzf"
+        "direnv"              # hooked in shell/zshrc
+        "modem-dev/tap/hunk"  # git pager in git/gitconfig
+    )
+
+    for package in "${packages[@]}"; do
+        local name="${package##*/}"
+        if brew list "$name" &>/dev/null; then
+            log_success "$name is already installed"
+        else
+            log_info "Installing $package..."
+            brew install "$package"
+        fi
+    done
+
+    log_success "Package installation completed"
+}
 
 install_oh_my_zsh() {
     log_info "Checking Oh My Zsh..."
@@ -22,7 +76,6 @@ install_zsh_plugins() {
 
     local zsh_custom="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
 
-    # zsh-autosuggestions
     if [[ ! -d "$zsh_custom/plugins/zsh-autosuggestions" ]]; then
         git clone https://github.com/zsh-users/zsh-autosuggestions "$zsh_custom/plugins/zsh-autosuggestions"
         log_success "Installed zsh-autosuggestions"
@@ -30,7 +83,6 @@ install_zsh_plugins() {
         log_success "zsh-autosuggestions already installed"
     fi
 
-    # zsh-syntax-highlighting
     if [[ ! -d "$zsh_custom/plugins/zsh-syntax-highlighting" ]]; then
         git clone https://github.com/zsh-users/zsh-syntax-highlighting "$zsh_custom/plugins/zsh-syntax-highlighting"
         log_success "Installed zsh-syntax-highlighting"

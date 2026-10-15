@@ -1,35 +1,208 @@
-# Vedran's Zsh Configuration Loader
-# Detects OS and sources appropriate config files
+# Vedran's Zsh Configuration (macOS)
 
-# Resolve the actual location of this file (follows symlink from ~/.zshrc)
-if [[ -L "$HOME/.zshrc" ]]; then
-    DOTFILES_SHELL="$(dirname "$(readlink -f "$HOME/.zshrc" 2>/dev/null || readlink "$HOME/.zshrc")")"
-else
-    DOTFILES_SHELL="${0:A:h}"
+# Keep PATH free of duplicate entries (zsh keeps $path and $PATH in sync)
+typeset -U path
+
+# ---------------------------------------------------------------------------
+# Oh My Zsh
+# ---------------------------------------------------------------------------
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME=""   # prompt is defined manually below
+
+plugins=(
+    git
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    colored-man-pages
+    command-not-found
+)
+
+[[ -d "$ZSH" ]] && source "$ZSH/oh-my-zsh.sh"
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+export LANG=en_US.UTF-8
+export EDITOR='nvim'
+
+# Secrets (e.g. private registry tokens) live in ~/.zshenv, not in this repo.
+
+# ---------------------------------------------------------------------------
+# PATH and tool managers
+# ---------------------------------------------------------------------------
+export PATH="$HOME/.local/bin:$PATH"
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+
+# Homebrew (Apple Silicon first, Intel fallback)
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# Source common configuration (works on all platforms)
-source "$DOTFILES_SHELL/zshrc.common"
+# Go (Homebrew)
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+if [[ -d "/opt/homebrew/opt/go/libexec" ]]; then
+    export GOROOT="/opt/homebrew/opt/go/libexec"
+    export PATH="$GOROOT/bin:$PATH"
+fi
 
-# Detect OS and source platform-specific config
-case "$(uname -s)" in
-    Darwin)
-        source "$DOTFILES_SHELL/zshrc.macos"
-        ;;
-    Linux)
-        if grep -qi microsoft /proc/version 2>/dev/null; then
-            source "$DOTFILES_SHELL/zshrc.wsl"
-        else
-            source "$DOTFILES_SHELL/zshrc.linux"
-        fi
-        ;;
-esac
+# OpenJDK (Homebrew)
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
 
-# bun completions
-[ -s "/home/echo/.bun/_bun" ] && source "/home/echo/.bun/_bun"
-
-# bun
+# Bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+[ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
+
+# opencode
+export PATH="$HOME/.opencode/bin:$PATH"
+
+# Maestro
+export PATH="$PATH:$HOME/.maestro/bin"
+
+# ---------------------------------------------------------------------------
+# Aliases
+# ---------------------------------------------------------------------------
+# Shell
+alias reload="source ~/.zshrc"
+alias ezsh="$EDITOR ~/.zshrc"
+alias vim='nvim'
+alias v='nvim'
+
+# Directory navigation
+alias ..="cd .. && pwd"
+alias ...="cd ../.."
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+# Project navigation
+alias cdg='cd ~/Documents/github'
+alias cdgv='cd ~/Documents/github/vblazenka'
+alias cdp='cd ~/Documents/projects'
+alias cds='cd ~/Documents/scripts'
+alias cdn='cd ~/Documents/notes'
+
+# Git
+alias g="git"
+alias gp="g pull"
+alias gs="g status"
+alias gb="g branch"
+alias gaa="g add ."
+alias gc="g commit -m"
+alias gr="g rebase master"
+alias grc="g add . && git rebase --continue"
+alias gch="git checkout"
+alias gl="git log"
+alias glog="git log --oneline --graph --decorate"
+
+# Claude Code
+alias c='claude'
+alias cc='claude -c'
+
+# Python / UV
+alias py='python3'
+alias pip='pip3'
+alias uvi='uv init'
+alias uva='uv add'
+alias uvr='uv run'
+alias uvs='uv sync'
+alias uvl='uv lock'
+alias uvt='uv tool install'
+alias uvp='uv python install'
+
+# Homebrew
+alias update='brew update && brew upgrade'
+alias install='brew install'
+alias search='brew search'
+
+# Clipboard
+alias clip='pbcopy'
+alias paste='pbpaste'
+
+# Finder and apps
+alias o='open .'
+alias cursor='open -a "Cursor"'
+alias obsidian='open -a "Obsidian"'
+alias zed='/Applications/Zed.app/Contents/MacOS/cli'
+
+# ---------------------------------------------------------------------------
+# Functions
+# ---------------------------------------------------------------------------
+# List scripts from package.json in the current git repo root
+scripts() {
+    local root
+    root=$(git rev-parse --show-toplevel 2>/dev/null) || root="."
+    local pkg="$root/package.json"
+    if [[ -f "$pkg" ]]; then
+        echo "Scripts in package.json:"
+        node -e "
+            const s = JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).scripts || {};
+            const entries = Object.entries(s);
+            if (!entries.length) { console.log('  (no scripts defined)'); process.exit(); }
+            const max = Math.max(...entries.map(([k]) => k.length));
+            entries.forEach(([k, v]) => console.log('  \x1b[36m' + k.padEnd(max + 2) + '\x1b[0m' + v));
+        " "$pkg"
+    else
+        echo "No package.json found in repository root"
+    fi
+}
+
+# Kill process listening on a given port
+kp() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: kp <port>"
+        return 1
+    fi
+    local pid
+    pid=$(lsof -ti :"$1" 2>/dev/null)
+    if [[ -z "$pid" ]]; then
+        echo "No process found on port $1"
+        return 1
+    fi
+    echo "Killing PID $pid on port $1"
+    kill -9 $pid
+}
+
+# Copy file contents to clipboard
+copyfile() {
+    if [[ -z "$1" ]]; then
+        echo "Usage: copyfile <file>"
+        return 1
+    fi
+    if [[ ! -f "$1" ]]; then
+        echo "File not found: $1"
+        return 1
+    fi
+    pbcopy < "$1"
+    echo "Copied contents of $1 to clipboard"
+}
+
+# ---------------------------------------------------------------------------
+# Prompt
+# ---------------------------------------------------------------------------
+parse_git_branch() {
+    git branch 2> /dev/null | sed -n -e 's/^\* \(.*\)/[\1]/p'
+}
+
+setopt PROMPT_SUBST
+PROMPT='%F{cyan}$%f $(parse_git_branch): '
+
+# ---------------------------------------------------------------------------
+# Integrations
+# ---------------------------------------------------------------------------
+# iTerm2 shell integration (no-op if not installed)
+[[ -e "$HOME/.iterm2_shell_integration.zsh" ]] && source "$HOME/.iterm2_shell_integration.zsh"
+
+# direnv
+command -v direnv &>/dev/null && eval "$(direnv hook zsh)"

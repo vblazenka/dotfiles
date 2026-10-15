@@ -16,3 +16,5 @@
 	undo = reset --soft HEAD^
 [init]
 	defaultBranch = main
+[core]
+	pager = hunk pager
