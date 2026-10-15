@@ -17,6 +17,12 @@ plugins=(
     command-not-found
 )
 
+# Homebrew-shipped completions must be on fpath before Oh My Zsh runs compinit
+for dir in /opt/homebrew/share/zsh/site-functions /usr/local/share/zsh/site-functions; do
+    [[ -d "$dir" ]] && fpath=("$dir" $fpath)
+done
+unset dir
+
 [[ -d "$ZSH" ]] && source "$ZSH/oh-my-zsh.sh"
 
 # ---------------------------------------------------------------------------

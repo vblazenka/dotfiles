@@ -32,6 +32,8 @@ dotfiles/
 │   └── gitconfig              # -> ~/.gitconfig
 ├── zellij/
 │   └── config.kdl             # -> ~/.config/zellij/config.kdl
+├── herdr/
+│   └── config.toml            # -> ~/.config/herdr/config.toml
 └── nvim/                      # -> ~/.config/nvim (LazyVim)
 ```
 
@@ -39,7 +41,7 @@ dotfiles/
 
 - **Shell**: Zsh + Oh My Zsh + plugins (autosuggestions, syntax highlighting)
 - **Editor**: Neovim with LazyVim
-- **Terminal multiplexer**: Zellij
+- **Terminal workspace**: herdr (agent multiplexer); Zellij is still installed and configured
 - **Python**: UV
 - **JavaScript**: NVM + Node LTS, Bun
 - **CLI tools**: git, curl, wget, ripgrep, fd, fzf, tree, htop, direnv, hunk (git pager)
@@ -58,4 +60,5 @@ Go and OpenJDK (via Homebrew), pnpm, opencode, Maestro. Their PATH entries are h
 - Aliases and functions: `shell/zshrc`
 - Git settings and aliases: `git/gitconfig`
 - Zellij keybindings: `zellij/config.kdl`
+- herdr settings: `herdr/config.toml`
 - Neovim: `nvim/lua/config/` and `nvim/lua/plugins/`

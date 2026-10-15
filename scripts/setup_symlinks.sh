@@ -38,6 +38,12 @@ setup_symlinks() {
     ln -sf "$dotfiles_dir/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"
     log_success "Linked ~/.config/zellij/config.kdl"
 
+    # Herdr config (only config.toml; the directory also holds logs, sockets, and session state)
+    mkdir -p "$HOME/.config/herdr"
+    backup_if_exists "$HOME/.config/herdr/config.toml"
+    ln -sf "$dotfiles_dir/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+    log_success "Linked ~/.config/herdr/config.toml"
+
     # Neovim config (link entire directory)
     # -n flag: treat symlink to directory as file, preventing nested links on re-run
     backup_if_exists "$HOME/.config/nvim"

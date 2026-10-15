@@ -32,6 +32,7 @@ install_packages() {
         "git"
         "neovim"
         "zellij"
+        "herdr"               # terminal workspace manager (agent multiplexer)
         "zsh"
         "curl"
         "wget"
